@@ -1045,7 +1045,10 @@ async def get_chats_by_folder_id(
     if children_folders:
         folder_ids.extend([folder.id for folder in children_folders])
 
-    return await chat_responses(await Chats.get_chats_by_folder_ids_and_user_id(folder_ids, user.id, db=db), db=db)
+    return await chat_responses(
+        await Chats.get_chats_by_folder_ids_and_user_id(folder_ids, user.id, include_pinned=True, db=db),
+        db=db,
+    )
 
 
 @router.get('/folder/{folder_id}/list', response_model=list[ChatTitleIdResponse])

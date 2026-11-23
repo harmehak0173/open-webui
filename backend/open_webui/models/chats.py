@@ -2959,17 +2959,22 @@ class ChatTable:
             return result.scalar_one()
 
     async def get_chats_by_folder_ids_and_user_id(
-        self, folder_ids: list[str], user_id: str, db: AsyncSession | None = None
+        self,
+        folder_ids: list[str],
+        user_id: str,
+        include_pinned: bool = False,
+        db: AsyncSession | None = None,
     ) -> list[ChatModel]:
         async with get_async_db_context(db) as session:
             stmt = (
                 select(Chat)
                 .filter(Chat.folder_id.in_(folder_ids), Chat.user_id == user_id)
-                .filter(or_(Chat.pinned == False, Chat.pinned == None))
                 .filter_by(archived=False)
                 .where(Chat.meta['internal'].as_boolean().is_not(True))
-                .order_by(Chat.updated_at.desc())
             )
+            if not include_pinned:
+                stmt = stmt.filter(or_(Chat.pinned == False, Chat.pinned == None))
+            stmt = stmt.order_by(Chat.updated_at.desc())
 
             result = await session.execute(stmt)
             all_chats = result.scalars().all()
